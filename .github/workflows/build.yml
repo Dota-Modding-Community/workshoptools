@@ -1,0 +1,107 @@
+name: Build ResourceCompiler
+
+on:
+  workflow_dispatch:
+    inputs:
+      release_tag:
+        description: "Release tag (e.g. v1.0.0; leave empty to only generate build artifact)"
+        required: false
+        default: ""
+      prerelease:
+        description: "Mark as prerelease"
+        required: false
+        type: boolean
+        default: false
+  push:
+    tags:
+      - "v*"
+      - "resourcecompiler-*"
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install 7-Zip & Tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y p7zip-full curl
+
+      - name: Install DepotDownloader
+        run: |
+          curl -sSL "https://github.com/SteamRE/DepotDownloader/releases/latest/download/DepotDownloader-linux-x64.zip" -o DepotDownloader.zip
+          mkdir -p /tmp/depotdownloader
+          unzip -q DepotDownloader.zip -d /tmp/depotdownloader
+          chmod +x /tmp/depotdownloader/DepotDownloader
+          echo "/tmp/depotdownloader" >> $GITHUB_PATH
+
+      - name: Download Depot 373301 (Game Definitions & Core Configs)
+        run: |
+          DepotDownloader \
+            -app 570 \
+            -depot 373301 \
+            -username "${{ secrets.STEAM_USERNAME }}" \
+            -password "${{ secrets.STEAM_PASSWORD }}" \
+            -filelist filelist.txt \
+            -dir resourcecompiler \
+            -max-downloads 8
+
+      - name: Download Depot 373303 (Base Game Win64 Binaries)
+        run: |
+          DepotDownloader \
+            -app 570 \
+            -depot 373303 \
+            -username "${{ secrets.STEAM_USERNAME }}" \
+            -password "${{ secrets.STEAM_PASSWORD }}" \
+            -filelist filelist.txt \
+            -dir resourcecompiler \
+            -max-downloads 8
+
+      - name: Download Depot 381450 (Workshop Tools DLC)
+        run: |
+          DepotDownloader \
+            -app 570 \
+            -depot 381450 \
+            -username "${{ secrets.STEAM_USERNAME }}" \
+            -password "${{ secrets.STEAM_PASSWORD }}" \
+            -filelist filelist.txt \
+            -dir resourcecompiler \
+            -max-downloads 8
+
+      - name: Copy panorama_config.txt
+        run: |
+          mkdir -p resourcecompiler/game/core/panorama
+          cp panorama_config.txt resourcecompiler/game/core/panorama/panorama_config.txt
+
+      - name: Clean up temporary metadata
+        run: |
+          rm -rf resourcecompiler/.DepotDownloader
+
+      - name: Compress to LZMA Zip Archive
+        run: |
+          # Compresses folder 'resourcecompiler' into 'resourcecompiler.zip' with LZMA
+          # Layout: resourcecompiler.zip/resourcecompiler/...
+          7z a -tzip -mm=lzma -mx=9 resourcecompiler.zip resourcecompiler
+
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: resourcecompiler
+          path: resourcecompiler.zip
+          if-no-files-found: error
+
+      - name: Publish GitHub Release
+        if: ${{ startsWith(github.ref, 'refs/tags/') || (github.event.inputs.release_tag != '' && github.event.inputs.release_tag != null) }}
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.event.inputs.release_tag || github.ref_name }}
+          files: resourcecompiler.zip
+          prerelease: ${{ github.event.inputs.prerelease || false }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
