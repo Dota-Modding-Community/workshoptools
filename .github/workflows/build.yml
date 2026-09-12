@@ -1,4 +1,4 @@
-name: Build ResourceCompiler
+name: Fetch resourcecompiler
 
 on:
   workflow_dispatch:
@@ -7,15 +7,6 @@ on:
         description: "Release tag (e.g. v1.0.0; leave empty to only generate build artifact)"
         required: false
         default: ""
-      prerelease:
-        description: "Mark as prerelease"
-        required: false
-        type: boolean
-        default: false
-  push:
-    tags:
-      - "v*"
-      - "resourcecompiler-*"
 
 permissions:
   contents: write
@@ -102,6 +93,6 @@ jobs:
         with:
           tag_name: ${{ github.event.inputs.release_tag || github.ref_name }}
           files: resourcecompiler.zip
-          prerelease: ${{ github.event.inputs.prerelease || false }}
+          prerelease: false
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

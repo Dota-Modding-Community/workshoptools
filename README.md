@@ -1,6 +1,6 @@
 # Minimal resourcecompiler workspace
 
-Not extensively tested, open an issue if something fails to compile along with the file.
+Not extensively tested, open an issue if something fails to compile along with the file(s).
 
 ## Downloading Locally
 
