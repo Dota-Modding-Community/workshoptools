@@ -32,35 +32,14 @@ jobs:
           chmod +x /tmp/depotdownloader/DepotDownloader
           echo "/tmp/depotdownloader" >> $GITHUB_PATH
 
-      - name: Download Depot 373301 (Game Definitions & Core Configs)
+      - name: Download Depots 373301, 373303, 381450
         run: |
           DepotDownloader \
             -app 570 \
-            -depot 373301 \
+            -depot 373301 373303 381450 \
             -username "${{ secrets.STEAM_USERNAME }}" \
             -password "${{ secrets.STEAM_PASSWORD }}" \
-            -filelist filelist.txt \
-            -dir resourcecompiler \
-            -max-downloads 8
-
-      - name: Download Depot 373303 (Base Game Win64 Binaries)
-        run: |
-          DepotDownloader \
-            -app 570 \
-            -depot 373303 \
-            -username "${{ secrets.STEAM_USERNAME }}" \
-            -password "${{ secrets.STEAM_PASSWORD }}" \
-            -filelist filelist.txt \
-            -dir resourcecompiler \
-            -max-downloads 8
-
-      - name: Download Depot 381450 (Workshop Tools DLC)
-        run: |
-          DepotDownloader \
-            -app 570 \
-            -depot 381450 \
-            -username "${{ secrets.STEAM_USERNAME }}" \
-            -password "${{ secrets.STEAM_PASSWORD }}" \
+            -remember-password \
             -filelist filelist.txt \
             -dir resourcecompiler \
             -max-downloads 8

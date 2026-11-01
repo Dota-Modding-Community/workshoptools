@@ -38,14 +38,12 @@ PASSWORD="${2:-${STEAM_PASSWORD:-}}"
 
 DEPOTS=(373301 373303 381450)
 
-for DEPOT in "${DEPOTS[@]}"; do
-    echo "==> Downloading Depot ${DEPOT}..."
-    if [ -n "$PASSWORD" ]; then
-        "$DD_BIN" -app 570 -depot "$DEPOT" -username "$USERNAME" -password "$PASSWORD" -filelist "$FILELIST" -dir "$OUT_DIR" -max-downloads 8
-    else
-        "$DD_BIN" -app 570 -depot "$DEPOT" -username "$USERNAME" -filelist "$FILELIST" -dir "$OUT_DIR" -max-downloads 8
-    fi
-done
+echo "==> Downloading Depots ${DEPOTS[*]}..."
+if [ -n "$PASSWORD" ]; then
+    "$DD_BIN" -app 570 -depot "${DEPOTS[@]}" -username "$USERNAME" -password "$PASSWORD" -remember-password -filelist "$FILELIST" -dir "$OUT_DIR" -max-downloads 8
+else
+    "$DD_BIN" -app 570 -depot "${DEPOTS[@]}" -username "$USERNAME" -remember-password -filelist "$FILELIST" -dir "$OUT_DIR" -max-downloads 8
+fi
 
 echo "==> Setting up panorama_config.txt..."
 mkdir -p "${OUT_DIR}/game/core/panorama"
